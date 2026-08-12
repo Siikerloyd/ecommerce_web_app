@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS order_status_history (
+    history_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    order_id INT NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+    status order_status NOT NULL DEFAULT 'PENDING',
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

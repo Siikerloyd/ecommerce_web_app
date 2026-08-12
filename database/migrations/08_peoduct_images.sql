@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS product_images (
+    image_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
+    image_url VARCHAR(255) NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
