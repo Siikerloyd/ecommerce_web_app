@@ -68,5 +68,14 @@ const CompleteUserSchema = z.object({
     role: UserRoleSchema
 });
 
-module.exports = CompleteUserSchema;
+const UpdateUserSchema = CompleteUserSchema
+    .partial()
+    .refine(
+        (data) => Object.keys(data).length > 0,
+        {
+            message: "At least one field must be provided for update"
+        }
+    );
+
+module.exports = {CompleteUserSchema,UpdateUserSchema};
 

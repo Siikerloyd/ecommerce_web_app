@@ -12,4 +12,9 @@ const HashPassword=async (plainPassword)=>{
         throw error;
     }
 };
-module.exports=HashPassword;
+
+const CheckPassword = async (LoginPassword, hash) => {
+    return bcrypt.compare(LoginPassword, hash);
+};
+
+module.exports={HashPassword,CheckPassword};

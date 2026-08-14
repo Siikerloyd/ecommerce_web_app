@@ -12,9 +12,13 @@ const port = 8080;
 
 //we include the express.json() middleware function so the server can read data in requests
 app.use(express.json());
-
+//we import and mount userroutes
 const userRoutes=require('./features/users/routes/userRoutes.js');
-app.use('/api', userRoutes); 
+app.use('/api', userRoutes);
+//we import and mount authroutes
+const authRoutes=require('./features/auth/routes/authroutes.js');
+app.use('/api',authRoutes);
+
 
 
 
