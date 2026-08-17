@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const verifyToken=require ('../../middleware/authMiddleware.js');
 const userController = require('../controllers/controller.js');
 const validate = require('../../middleware/validate.js');
 
@@ -9,8 +9,8 @@ const {
     UpdateUserSchema
 } = require('../../../validators/register_validator.js');
 
-router.get('/users', userController.getAllUsers);
-router.get('/users/:id', userController.getUserById);
+router.get('/users',verifyToken, userController.getAllUsers);
+router.get('/users/:id',verifyToken, userController.getUserById);
 
 router.post(
     '/users',
@@ -18,14 +18,15 @@ router.post(
     userController.createUser
 );
 
-router.put('/users/:id', userController.updateUser);
+//router.put('/users/:id',verifyToken, userController.updateUser);
 
 router.patch(
-    '/users/:id',
+    '/users/:id',verifyToken,
     validate(UpdateUserSchema),
     userController.PartialUpdateUser
 );
 
-router.delete('/users/:id', userController.deleteUser);
+router.delete('/users/:id',verifyToken, userController.deleteUser);
+
 
 module.exports = router;

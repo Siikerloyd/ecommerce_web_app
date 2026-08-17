@@ -2,10 +2,13 @@
 const pool = require('./config/connect_database.js');
 const express = require('express');
 
+//import error handler 
+const errorHandler = require('./features/middleware/errorMiddleware.js');
+
 
 
 //call the express function to create the server and assigne it to app object 
-const app=express();
+const app = express();
 
 //assign port for the server to listen on
 const port = 8080;
@@ -13,17 +16,22 @@ const port = 8080;
 //we include the express.json() middleware function so the server can read data in requests
 app.use(express.json());
 //we import and mount userroutes
-const userRoutes=require('./features/users/routes/userRoutes.js');
+const userRoutes = require('./features/users/routes/userRoutes.js');
 app.use('/api', userRoutes);
 //we import and mount authroutes
-const authRoutes=require('./features/auth/routes/authroutes.js');
-app.use('/api',authRoutes);
+const authRoutes = require('./features/auth/routes/authroutes.js');
+app.use('/api', authRoutes);
+
+
+
+//must be after routes:add error handler to the server
+app.use(errorHandler);
 
 
 
 
 // Define a route for GET requests to the root URL
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
 
     res.send('hello world');
 });
@@ -115,8 +123,8 @@ app.delete('/delete_user/:id', async(req,res)=>{
 */
 
 //start server
-app.listen(port,()=>{
-  console.log(`Example app listening at http://localhost:${port}`);
+app.listen(port, () => {
+    console.log(`Example app listening at http://localhost:${port}`);
 });
 
 

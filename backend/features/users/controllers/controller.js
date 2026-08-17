@@ -1,6 +1,8 @@
 //import services
 const { id } = require('zod/v4/locales');
-const all_users = require('../services/service.js')
+const all_users = require('../services/service.js');
+//import apperror objsect
+const AppError=require('../../../utils/AppError.js');
 //get all users controller
 exports.getAllUsers = async (req, res) => {
     try {
@@ -37,6 +39,7 @@ exports.createUser = async (req, res) => {
 };
 
 //update user
+/*
 exports.updateUser = async (req, res) => {
     const data = req.body;
     const user_id = req.params.id;
@@ -49,7 +52,7 @@ exports.updateUser = async (req, res) => {
         console.log(error);
         res.json({ message: "cannot update user" });
     };
-};
+};*/
 
 //delete user
 exports.deleteUser = async (req, res) => {

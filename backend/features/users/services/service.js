@@ -17,7 +17,7 @@ exports.getUserById = async (user_id) => {
 
 //create new user
 exports.createUser = async (user_data) => {
-    const HashedPassword = await HashPasword(user_data.password);
+    const HashedPassword = await HashPasword.HashPassword(user_data.password);
     const querry = await pool.query(
         `insert into users(
     first_name, 
@@ -32,8 +32,9 @@ exports.createUser = async (user_data) => {
 };
 
 //update user
+/*
 exports.updateUser = async (user_id, data) => {
-    const HashedPassword = await HashPasword(data.password);
+    const HashedPassword = await HashPasword.HashPassword(data.password);
     const query = await pool.query(
         `UPDATE users 
          SET first_name=$1,
@@ -54,7 +55,7 @@ exports.updateUser = async (user_id, data) => {
         ]
     );
     return query;
-};
+};*/
 
 //delete user
 exports.deleteUser = async (user_id) => {
@@ -66,6 +67,7 @@ exports.deleteUser = async (user_id) => {
 };
 
 //patch :dynamic partial update 
+//remeber to use hashpassword here 
 exports.PartialUpdateUser = async (UserId, data) => {
     const fields = Object.keys(data);
     const setParts = [];
