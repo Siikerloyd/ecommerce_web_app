@@ -1,6 +1,8 @@
 const pool = require('../../../config/connect_database.js');
+const AppError = require('../../../utils/AppError.js');
 const check = require('../../../utils/hash.js');
 const jwt = require('../../../utils/jwt.js');
+/*
 exports.login = async (data) => {
     const result = await pool.query
         (
@@ -40,4 +42,64 @@ exports.login = async (data) => {
 
     return null;
 
+};
+*/
+
+//auth service with error handler 
+exports.login = async (data) => {
+
+    const result = await pool.query(
+        `
+        SELECT user_id, first_name, last_name, email,
+               phone_number, password_hash, role
+        FROM users
+        WHERE email = $1;
+        `,
+        [data.email]
+    );
+
+    if (result.rows.length === 0) {
+        throw new AppError(
+            "Please make sure to enter your email and password correctly",
+            401
+        );
+    }
+
+    const passwordCorrect = await check.CheckPassword(
+        data.password,
+        result.rows[0].password_hash
+    );
+
+    if (!passwordCorrect) {
+        throw new AppError(
+            "Please make sure to enter your email and password correctly",
+            401
+        );
+    }
+
+    await pool.query(
+        `UPDATE users
+         SET is_active = true,
+             last_login = NOW()
+         WHERE email = $1`,
+        [data.email]
+    );
+
+    const user = result.rows[0];
+
+    const safeUser = {
+        user_id: user.user_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        phone_number: user.phone_number,
+        role: user.role
+    };
+
+    const token = jwt.generateToken(safeUser);
+
+    return {
+        user: safeUser,
+        token
+    };
 };
