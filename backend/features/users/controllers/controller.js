@@ -2,7 +2,7 @@
 const { id } = require('zod/v4/locales');
 const all_users = require('../services/service.js');
 //import apperror objsect
-const AppError=require('../../../utils/AppError.js');
+const AppError = require('../../../utils/AppError.js');
 //get all users controller
 exports.getAllUsers = async (req, res) => {
     try {
@@ -12,6 +12,7 @@ exports.getAllUsers = async (req, res) => {
         res.status(500).json({ message: "databse querry failed" });
     };
 };
+/*
 //get user by id
 exports.getUserById = async (req, res) => {
     const user_id = req.params.id;
@@ -22,7 +23,17 @@ exports.getUserById = async (req, res) => {
         res.status(500).json({ message: "database querry failed" });
     };
 
+};*/
+
+//get user by id whith error handler
+exports.getUserById = async (req, res) => {
+    const user_id = req.params.id;
+
+    const user = await all_users.getUserById(user_id);
+
+    res.json(user);
 };
+/*
 //create a new user 
 exports.createUser = async (req, res) => {
     const user_data = req.body;
@@ -36,7 +47,15 @@ exports.createUser = async (req, res) => {
         res.json({ message: "failed to create user" });
     }
 
+};*/
+//simplified controller without try and catch
+exports.createUser = async (req, res) => {
+    const user_data = req.body;
+    const result = await all_users.createUser(user_data);
+    res.status(201).json({ message: "user created", userId: result.user_id });
+
 };
+
 
 //update user
 /*
@@ -55,6 +74,7 @@ exports.updateUser = async (req, res) => {
 };*/
 
 //delete user
+/*
 exports.deleteUser = async (req, res) => {
     const user_id = req.params.id;
     try {
@@ -63,10 +83,21 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.json({ message: "user was not deleted" });
-    }
-}
+    };
+};*/
+//simplified delete user controller 
+exports.deleteUser = async (req, res) => {
 
+    const user_id = req.params.id;
 
+    const result = await all_users.deleteUser(user_id);
+
+    res.status(200).json({
+        message: "User deleted successfully"
+    });
+};
+
+/*
 exports.PartialUpdateUser = async (req, res) => {
     const UserId = req.params.id;
     const data = req.body;
@@ -77,4 +108,12 @@ exports.PartialUpdateUser = async (req, res) => {
         console.log(error);
         res.json({ message: "user was not updated" });
     }
+};*/
+exports.PartialUpdateUser = async (req, res) => {
+    const UserId = req.params.id;
+    const data = req.body;
+    const result = await all_users.PartialUpdateUser(UserId, data);
+    res.json({ "message": "user updated", "user id": UserId });
+
+
 };
