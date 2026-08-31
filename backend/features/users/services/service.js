@@ -99,6 +99,7 @@ exports.deleteUser = async (user_id) => {
 
 //patch :dynamic partial update 
 //remeber to use hashpassword here 
+/*
 exports.PartialUpdateUser = async (UserId, data) => {
     const fields = Object.keys(data);
     const setParts = [];
@@ -121,7 +122,7 @@ exports.PartialUpdateUser = async (UserId, data) => {
     } else {
         throw new Error("No fields provided for update");
     }
-}
+}*/
 
 
 //patch :dynamic partial update 

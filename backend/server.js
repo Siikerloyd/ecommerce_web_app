@@ -21,6 +21,9 @@ app.use('/api', userRoutes);
 //we import and mount authroutes
 const authRoutes = require('./features/auth/routes/authroutes.js');
 app.use('/api', authRoutes);
+//we import and mount product routes
+const productRoutes=require('./features/products/routes/productRoutes.js');
+app.use('/api',productRoutes);
 
 
 
