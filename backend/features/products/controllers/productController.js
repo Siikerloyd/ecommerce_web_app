@@ -31,3 +31,10 @@ exports.deleteProductById=async(req,res)=>{
     const result =await product_services.deleteProductById(id);
     res.status(200).json({"product id":id,message:"product deleted sucessfully"});
 }
+
+
+exports.searchProducts=async(req,res)=>{
+    const query=req.query;
+    const result=await product_services.searchProducts(query);
+    res.status(200).json({result})
+}
