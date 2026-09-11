@@ -24,6 +24,9 @@ app.use('/api', authRoutes);
 //we import and mount product routes
 const productRoutes=require('./features/products/routes/productRoutes.js');
 app.use('/api',productRoutes);
+//import and mount category routes
+const catRoutes=require('./features/category/routes/category_routes.js');
+app.use('/api',catRoutes);
 
 
 
