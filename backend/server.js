@@ -27,9 +27,9 @@ app.use('/api',productRoutes);
 //import and mount category routes
 const catRoutes=require('./features/category/routes/category_routes.js');
 app.use('/api',catRoutes);
-
-
-
+//import brand routes and mount to server
+const brandRoutes=require('./features/brands/routes/brandRoutes.js');
+app.use('/api',brandRoutes);
 //must be after routes:add error handler to the server
 app.use(errorHandler);
 
