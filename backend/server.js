@@ -30,6 +30,9 @@ app.use('/api',catRoutes);
 //import brand routes and mount to server
 const brandRoutes=require('./features/brands/routes/brandRoutes.js');
 app.use('/api',brandRoutes);
+//import addresses routes and mount
+const addressesRoutes=require('./features/adresses/routes/addressRoutes.js');
+app.use('/api',addressesRoutes);
 //must be after routes:add error handler to the server
 app.use(errorHandler);
 
