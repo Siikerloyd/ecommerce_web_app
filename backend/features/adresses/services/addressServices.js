@@ -123,3 +123,70 @@ exports.updateAddress = async (userId, addressId, data) => {
         if (client) client.release();
     }
 };
+
+
+exports.deleteAddressById = async (userId, addressId) => {
+    let client;
+    let getOldesAddress = null;
+    try {
+        client = await pool.connect();
+        await client.query('BEGIN');
+
+        const checkMain = await client.query(
+            `select is_default from addresses 
+        where user_id=$1 and address_id=$2 for update`, [userId, addressId]);
+        if (checkMain.rowCount === 0) {
+            throw new AppError('Address not found!', 404);
+        }
+        if (checkMain.rows[0].is_default === true) {
+            getOldesAddress = await client.query(
+                `
+                SELECT address_id
+                FROM addresses
+                WHERE user_id = $1
+                AND address_id != $2
+                ORDER BY created_at ASC
+                LIMIT 1
+                `, [userId, addressId]);
+
+        }
+        const query = await client.query(
+            `
+        DELETE FROM addresses
+        WHERE address_id = $1
+        AND user_id = $2
+        `,
+            [addressId, userId]
+        );
+        if (getOldesAddress && getOldesAddress.rowCount > 0) {
+
+
+            await client.query(
+                `
+            update addresses
+            set is_default=$1
+            where address_id=$2
+            and user_id=$3
+            `, [true, getOldesAddress.rows[0].address_id, userId]
+            )
+        }
+
+        await client.query('COMMIT')
+
+        return query;
+    } catch (error) {
+        if (client) {
+            await client.query('ROLLBACK');
+        }
+        if (error.code === '22P02') {
+            throw new AppError('Invalid address ID', 400);
+        }
+
+        throw error;
+
+    } finally {
+        if (client) {
+            client.release();
+        }
+    }
+};

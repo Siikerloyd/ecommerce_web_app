@@ -46,3 +46,14 @@ exports.updateAddress=async(req,res)=>{
         result
     });
 }
+
+
+exports.deleteAddressById=async(req,res)=>{
+    const addressId=req.params.id;
+    const userId=req.user.user_id;
+    const result=await addressService.deleteAddressById(userId,addressId);
+    res.status(200).json({
+        message: 'Address deleted successfully',
+        result
+    });
+}
