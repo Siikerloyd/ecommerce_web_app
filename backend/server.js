@@ -33,6 +33,8 @@ app.use('/api',brandRoutes);
 //import addresses routes and mount
 const addressesRoutes=require('./features/adresses/routes/addressRoutes.js');
 app.use('/api',addressesRoutes);
+const productImagesRoutes=require('./features/product_images/routes/productImageRoutes.js');
+app.use('/api',productImagesRoutes);
 //must be after routes:add error handler to the server
 app.use(errorHandler);
 
