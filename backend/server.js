@@ -35,8 +35,14 @@ const addressesRoutes=require('./features/adresses/routes/addressRoutes.js');
 app.use('/api',addressesRoutes);
 const productImagesRoutes=require('./features/product_images/routes/productImageRoutes.js');
 app.use('/api',productImagesRoutes);
+//import and mount cartRoutes 
+
+const cartRoutes=require('./features/cart/routes/cartRoutes.js');
+app.use('/api',cartRoutes);
+
 //must be after routes:add error handler to the server
 app.use(errorHandler);
+
 
 
 
