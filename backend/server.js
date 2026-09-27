@@ -44,6 +44,10 @@ app.use('/api',cartRoutes);
 const orderRoutes=require('./features/orders/routes/orderRoutes.js');
 app.use('/api',orderRoutes);
 
+//import and mount review routes 
+const reviewRoutes = require("./features/reviews/routes/reviewRoutes.js");
+app.use("/api", reviewRoutes);
+
 //must be after routes:add error handler to the server
 app.use(errorHandler);
 
