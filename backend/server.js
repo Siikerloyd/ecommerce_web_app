@@ -40,6 +40,10 @@ app.use('/api',productImagesRoutes);
 const cartRoutes=require('./features/cart/routes/cartRoutes.js');
 app.use('/api',cartRoutes);
 
+//import and mount order routes
+const orderRoutes=require('./features/orders/routes/orderRoutes.js');
+app.use('/api',orderRoutes);
+
 //must be after routes:add error handler to the server
 app.use(errorHandler);
 

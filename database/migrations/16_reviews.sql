@@ -8,3 +8,6 @@ CREATE TABLE IF NOT EXISTS reviews (
 
     UNIQUE(user_id, product_id)
 );
+
+ALTER TABLE reviews
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
