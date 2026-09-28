@@ -48,6 +48,10 @@ app.use('/api',orderRoutes);
 const reviewRoutes = require("./features/reviews/routes/reviewRoutes.js");
 app.use("/api", reviewRoutes);
 
+//import and mount wishlist routes
+const wishlistRoutes = require("./features/wishlist/routes/wishlistRoutes.js");
+app.use("/api", wishlistRoutes);
+
 //must be after routes:add error handler to the server
 app.use(errorHandler);
 
