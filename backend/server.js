@@ -52,6 +52,11 @@ app.use("/api", reviewRoutes);
 const wishlistRoutes = require("./features/wishlist/routes/wishlistRoutes.js");
 app.use("/api", wishlistRoutes);
 
+//mount and import notifications routes
+
+const notificationsRoutes=require('./features/notifications/routes/notificationsRoutes.js');
+app.use("/api",notificationsRoutes);
+
 //must be after routes:add error handler to the server
 app.use(errorHandler);
 
