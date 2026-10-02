@@ -262,22 +262,27 @@ exports.getmyassignedorder = async (orderId, userId) => {
 
 
 exports.manageaOrders = async (orderId, deliveryId) => {
+    let client;
     try {
-        const checkOrder = await pool.query(
+        client = await pool.connect();
+        await client.query("BEGIN");
+        //check if order exists
+        const checkOrder = await client.query(
             `
-            select delivery_id from orders
+            select delivery_id,status from orders
             where order_id=$1;
             `, [orderId]
         );
         if (checkOrder.rowCount === 0) {
             throw new AppError("order does not exist", 404);
         };
-
+        
+        //check if deliveryId actually provided 
         if (!deliveryId) {
             throw new AppError("delivery_id is required", 400);
         }
-
-        const checkDelivery = await pool.query(
+        //check if the delivery id valid
+        const checkDelivery = await client.query(
             `
             select delivery_id from delivery_profiles 
             where delivery_id=$1;
@@ -287,20 +292,46 @@ exports.manageaOrders = async (orderId, deliveryId) => {
         if (checkDelivery.rowCount === 0) {
             throw new AppError('delivery personnel not found!', 404);
         }
-        const updateorder = await pool.query(
+        //check if order status is shipped 
+        if (checkOrder.rows[0].status !== 'SHIPPED') {
+            throw new AppError("order status should be shipped in order to assigne delivey", 400);
+
+        }
+        //update the order 
+        const updateorder = await client.query(
             `
             update orders
-            set delivery_id=$1
+            set delivery_id=$1,status='OUT_FOR_DELIVERY'
             where order_id=$2
             returning *
             `, [deliveryId, orderId]
-        )
+        );
+
+        await client.query(
+            `
+            insert into order_status_history(order_id,status)
+            values($1,'OUT_FOR_DELIVERY')`, [orderId]
+        );
+
+        await client.query("COMMIT");
         return updateorder.rows[0];
     } catch (error) {
+
+        if (client) {
+            await client.query("ROLLBACK");
+        }
+
+
         if (error.code === "22P02") {
             throw new AppError("Invalid order ID", 400);
         }
+        
         throw error;
+    } finally {
+        if (client) {
+            client.release();
+        }
+
     }
 }
 
