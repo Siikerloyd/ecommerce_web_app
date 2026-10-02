@@ -122,7 +122,7 @@ exports.createOrder = async (userId, data) => {
             total_price)
             VALUES ($1, $2, $3, $4)
             RETURNING *`, [orderNumber, userId, data.address_id, total]);
-         //after creating the order we create order items this way we can store the product price in that time even if it changes later in the future 
+        //after creating the order we create order items this way we can store the product price in that time even if it changes later in the future 
         const orderId = order.rows[0].order_id;
         // create initial order status history
         await client.query(
@@ -211,7 +211,7 @@ exports.updateOrderStatus = async (orderId, data) => {
     try {
         client = await pool.connect();
         await client.query("BEGIN");
-
+        //we check if the order exists
         const checkOrder = await client.query(
             `
             SELECT status
@@ -224,7 +224,7 @@ exports.updateOrderStatus = async (orderId, data) => {
         if (checkOrder.rowCount === 0) {
             throw new AppError("order does not exist!", 404);
         }
-
+        // we update the order according to its status 
         const statusUpdate = await client.query(
             `
             UPDATE orders
@@ -237,23 +237,45 @@ exports.updateOrderStatus = async (orderId, data) => {
                 OR
                 (status = 'PREPARING' AND $1::order_status = 'SHIPPED')
                 OR
-                (status = 'SHIPPED' AND $1::order_status = 'OUT_FOR_DELIVERY')
-                OR
                 (status = 'OUT_FOR_DELIVERY' AND $1::order_status = 'DELIVERED')
+
+                -- cancellation
                 OR
                 (status = 'PENDING' AND $1::order_status = 'CANCELLED')
                 OR
                 (status = 'CONFIRMED' AND $1::order_status = 'CANCELLED')
+                OR
+                (status = 'PREPARING' AND $1::order_status = 'CANCELLED')
+                OR
+                (status = 'SHIPPED' AND $1::order_status = 'CANCELLED')
             )
             RETURNING *;
             `,
             [status, orderId]
         );
 
+        //we check if the status update is valid
+
         if (statusUpdate.rowCount === 0) {
             throw new AppError("Invalid order status transition", 400);
         }
 
+        if (status === "CANCELLED") {
+            // restore stock
+            const restoreStock = await client.query(
+            `
+            UPDATE products p
+            SET stock_quantity = p.stock_quantity + oi.quantity
+            FROM order_items oi
+            WHERE oi.order_id = $1
+            AND p.product_id = oi.product_id;
+            `,
+            [orderId]
+        );
+
+        }
+
+        //we insert new order status in order_status_history table
         await client.query(
             `
             INSERT INTO order_status_history(order_id, status)
