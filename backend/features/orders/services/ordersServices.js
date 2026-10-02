@@ -122,8 +122,17 @@ exports.createOrder = async (userId, data) => {
             total_price)
             VALUES ($1, $2, $3, $4)
             RETURNING *`, [orderNumber, userId, data.address_id, total]);
+         //after creating the order we create order items this way we can store the product price in that time even if it changes later in the future 
         const orderId = order.rows[0].order_id;
-        //after creating the order we create order items this way we can store the product price in that time even if it changes later in the future 
+        // create initial order status history
+        await client.query(
+            `
+            INSERT INTO order_status_history(order_id, status)
+            VALUES ($1, $2)
+            `,
+            [orderId, order.rows[0].status]
+        );
+
         for (const item of getCartItemsDetails.rows) {
             //we check each product status in cart_items
             if (item.status !== "ACTIVE") {
@@ -197,51 +206,80 @@ exports.createOrder = async (userId, data) => {
 
 exports.updateOrderStatus = async (orderId, data) => {
     const status = data.status;
+    let client;
+
     try {
-        const checkOrder = await pool.query(
+        client = await pool.connect();
+        await client.query("BEGIN");
+
+        const checkOrder = await client.query(
             `
-        select status from orders where order_id=$1
-        `, [orderId]
-        )
+            SELECT status
+            FROM orders
+            WHERE order_id = $1
+            `,
+            [orderId]
+        );
 
         if (checkOrder.rowCount === 0) {
             throw new AppError("order does not exist!", 404);
         }
 
-        const statusUpdate = await pool.query(
+        const statusUpdate = await client.query(
             `
             UPDATE orders
             SET status = $1
             WHERE order_id = $2
             AND (
-            (status = 'PENDING' AND $1::order_status = 'CONFIRMED')
-            OR
-            (status = 'CONFIRMED' AND $1::order_status = 'PREPARING')
-            OR
-            (status = 'PREPARING' AND $1::order_status = 'SHIPPED')
-            OR
-            (status = 'SHIPPED' AND $1::order_status = 'OUT_FOR_DELIVERY')
-            OR
-            (status = 'OUT_FOR_DELIVERY' AND $1::order_status = 'DELIVERED')
-            OR
-            (status = 'PENDING' AND $1::order_status = 'CANCELLED')
-            OR
-            (status = 'CONFIRMED' AND $1::order_status = 'CANCELLED')
-        )
+                (status = 'PENDING' AND $1::order_status = 'CONFIRMED')
+                OR
+                (status = 'CONFIRMED' AND $1::order_status = 'PREPARING')
+                OR
+                (status = 'PREPARING' AND $1::order_status = 'SHIPPED')
+                OR
+                (status = 'SHIPPED' AND $1::order_status = 'OUT_FOR_DELIVERY')
+                OR
+                (status = 'OUT_FOR_DELIVERY' AND $1::order_status = 'DELIVERED')
+                OR
+                (status = 'PENDING' AND $1::order_status = 'CANCELLED')
+                OR
+                (status = 'CONFIRMED' AND $1::order_status = 'CANCELLED')
+            )
             RETURNING *;
-            `, [status, orderId]
-        )
+            `,
+            [status, orderId]
+        );
+
         if (statusUpdate.rowCount === 0) {
             throw new AppError("Invalid order status transition", 400);
         }
+
+        await client.query(
+            `
+            INSERT INTO order_status_history(order_id, status)
+            VALUES ($1, $2)
+            `,
+            [orderId, statusUpdate.rows[0].status]
+        );
+
+        await client.query("COMMIT");
+
         return statusUpdate.rows[0];
+
     } catch (error) {
+        if (client) {
+            await client.query("ROLLBACK");
+        }
+
         if (error.code === "22P02") {
             throw new AppError("Invalid order ID", 400);
         }
 
         throw error;
 
+    } finally {
+        if (client) {
+            client.release();
+        }
     }
-
-}
+};
