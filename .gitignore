@@ -2,3 +2,6 @@ backend/node_modules/
 backend/.env
 database/backup/
 keys/
+
+frontend/node_modules/
+frontend/dist/
