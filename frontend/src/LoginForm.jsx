@@ -1,37 +1,58 @@
+import "./LoginForm.css";
+
 export function LoginForm() {
+  function handleSubmit(e) {
+    e.preventDefault();
+    // handle login
+  }
 
   return (
-    <form >
-      <h1>Sign In</h1>
+    <div className="auth-page">
+      <form className="auth-card" onSubmit={handleSubmit}>
+        <p className="auth-eyebrow">Welcome back</p>
+        <h1 className="auth-title">Sign In</h1>
+        <p className="auth-subtitle">Sign in to continue shopping.</p>
 
-      <label htmlFor="user-email">Email</label>
-      <input
-        id="user-email"
-        name="email"
-        type="email"
-        placeholder="Enter your email"
-        autoComplete="email"
-        required
-      />
+        <div className="field">
+          <label htmlFor="user-email">Email</label>
+          <input
+            id="user-email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
+        </div>
 
-      <label htmlFor="user-password">Password</label>
-      <input
-        id="user-password"
-        name="password"
-        type="password"
-        placeholder="Enter your password"
-        autoComplete="current-password"
-        required
-      />
+        <div className="field">
+          <label htmlFor="user-password">Password</label>
+          <input
+            id="user-password"
+            name="password"
+            type="password"
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            required
+          />
+        </div>
 
-      <input type="checkbox" id="remember-me" name="remember" />
-      <label htmlFor="remember-me">Remember me</label>
+        <div className="auth-row">
+          <label className="checkbox" htmlFor="remember-me">
+            <input type="checkbox" id="remember-me" name="remember" />
+            Remember me
+          </label>
+          <a href="/forgot">Forgot password?</a>
+        </div>
 
-      <button type="submit">Sign in</button>
+        <button className="btn-primary" type="submit">
+          Sign in
+        </button>
 
-      <p>
-        <span>No account?</span> <a href="/signup">Create one</a>
-      </p>
-    </form>
+        <p className="auth-footer">
+          No account? <a href="/signup">Create one</a>
+        </p>
+      </form>
+    </div>
   );
 }
