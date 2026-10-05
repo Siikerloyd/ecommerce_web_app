@@ -1,3 +1,5 @@
+//import cors
+const cors = require("cors");
 //import the pool into the server
 const pool = require('./config/connect_database.js');
 const express = require('express');
@@ -9,6 +11,10 @@ const errorHandler = require('./features/middleware/errorMiddleware.js');
 
 //call the express function to create the server and assigne it to app object 
 const app = express();
+//allow request coming from this origin(frontend)
+app.use(cors({
+  origin: "http://localhost:5173"
+}));
 
 //assign port for the server to listen on
 const port = 8080;
