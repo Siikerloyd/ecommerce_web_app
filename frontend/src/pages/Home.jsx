@@ -28,8 +28,7 @@ export function Home() {
 
     }, []);
 
-    console.log(user);
-    console.log(token);
+   
 
     return (
         <h1>Welcome to Home</h1>

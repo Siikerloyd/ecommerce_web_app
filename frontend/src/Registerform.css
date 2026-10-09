@@ -1,0 +1,200 @@
+/*
+  Register page extras.
+  Everything else (layout, photo panel, inputs, buttons) comes from
+  LoginForm.css, so the two pages always look the same.
+*/
+
+/* First name + last name side by side */
+.lf-row-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 14px;
+}
+
+/* inputs without a leading icon */
+.lf-input--plain input {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+/* small helper text under a field */
+.lf-hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+/* terms checkbox */
+.lf-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 20px;
+  color: #3f3f46;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.lf-terms input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.lf-terms a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* role picker (Customer / Delivery) */
+.lf-fieldset {
+  min-width: 0;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+
+.lf-fieldset legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.lf-roles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.lf-role {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+/* the real radio stays in place (so it works with keyboard) but is invisible */
+.lf-role input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lf-role-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.lf-role-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: #f1f1f3;
+  border-radius: 8px;
+  color: var(--muted);
+  transition: background 0.2s, color 0.2s;
+}
+
+.lf-role-text strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.lf-role-text span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+.lf-role:hover .lf-role-body {
+  border-color: #b8b8c0;
+}
+
+.lf-role input:checked+.lf-role-body {
+  background: #fffaf3;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(168, 105, 26, 0.14);
+}
+
+.lf-role input:checked+.lf-role-body .lf-role-icon {
+  background: var(--gold);
+  color: #fff;
+}
+
+.lf-role input:focus-visible+.lf-role-body {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/*submit button*/
+.lf-submit {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.lf-submit.is-loading {
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+/*errors for each field
+.lf-error {
+  color: #e53e3e;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  margin-bottom: 0;
+}*/
+
+/* Smooth text transition */
+.lf-submit-label {
+  transition: opacity 0.25s ease;
+}
+
+/* Spinner */
+.lf-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Optional: nice scale effect when loading starts */
+.lf-submit.is-loading {
+  transform: scale(0.98);
+}
+
+/* very small phones: stack the name fields and the role cards */
+@media (max-width: 380px) {
+
+  .lf-row-2,
+  .lf-roles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

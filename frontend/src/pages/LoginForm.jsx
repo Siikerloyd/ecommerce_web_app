@@ -129,6 +129,7 @@ export function LoginForm(props) {
   const [greeting] = useState(getGreeting);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { setUser, setToken } = useContext(AuthContext);
+  const [serverError, setServerError] = useState(null);
   //redirect 
   const navigate = useNavigate();
   function handleChange(e) {
@@ -142,13 +143,13 @@ export function LoginForm(props) {
   //handle submitt 
   async function handleSubmit(e) {
     e.preventDefault();
-
-    const email = form.email;
+    const email = form.email.trim().toLowerCase();
     const password = form.password;
-
-    if (verifyEmail(email) && verifyPassword(password)) {
-      setIsSubmitting(true);
-
+    if (!verifyEmail(email) || !verifyPassword(password)) {
+      return;
+    }
+    setIsSubmitting(true);
+    try {
       const response = await fetch("http://localhost:8080/api/login", {
         method: "POST",
         headers: {
@@ -159,20 +160,36 @@ export function LoginForm(props) {
           password,
         }),
       });
-
       const data = await response.json();
-      
+      // Handle backend errors: 401, 400, 500, etc.
+      if (!response.ok) {
+        console.error("Login error:", data);
+
+        setServerError(
+          data.message || `Login failed (${response.status}). Please try again.`
+        );
+
+        return;
+      }
+      // Make sure the successful response contains what we need
+      if (!data.user || !data.token) {
+        setServerError("Invalid response from server. Please try again.");
+        return;
+      }
+
+      // Login succeeded
       setUser(data.user);
       setToken(data.token);
-
-     
       navigate("/home");
-      
+    } catch (error) {
+      // Network failure, backend offline, invalid JSON, etc.
+      console.error("Login request failed:", error);
 
+      setServerError("Unable to contact the server. Please try again.");
+    } finally {
       setIsSubmitting(false);
-    } else {
-      // error later
     }
+
   }
 
   return (
@@ -294,6 +311,12 @@ export function LoginForm(props) {
           {error && (
             <p className="lf-error" role="alert">
               {error}
+            </p>
+          )}
+
+          {serverError && (
+            <p role="alert" className="lf-error">
+              {serverError}
             </p>
           )}
 
