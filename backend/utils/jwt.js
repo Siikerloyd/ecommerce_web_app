@@ -9,9 +9,14 @@ const privateKey = fs.readFileSync(
 exports.generateToken = (data) => {
     const payload = {
         user_id: data.user_id,
-        role: data.role
+        role: data.role,
+        token_version: data.token_version
     };
-    const token = jwt.sign(payload, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
-    return token;
 
+    const token = jwt.sign(payload, privateKey, {
+        algorithm: 'RS256',
+        expiresIn: '1h'
+    });
+
+    return token;
 };

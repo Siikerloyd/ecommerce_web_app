@@ -51,7 +51,7 @@ exports.login = async (data) => {
     const result = await pool.query(
         `
         SELECT user_id, first_name, last_name, email,
-               phone_number, password_hash, role
+               phone_number, password_hash, role,token_version
         FROM users
         WHERE email = $1;
         `,
@@ -96,10 +96,26 @@ exports.login = async (data) => {
         role: user.role
     };
 
-    const token = jwt.generateToken(safeUser);
+    const token = jwt.generateToken({
+        ...safeUser,
+        token_version: user.token_version
+    });
 
     return {
         user: safeUser,
         token
     };
 };
+
+
+exports.me = async (user) => {
+    const userId = user.user_id;
+    const result = await pool.query(
+        `select user_id,first_name,last_name,email,phone_number,role
+        from users where user_id=$1`
+        , [userId])
+    if (result.rowCount === 0) {
+        throw new AppError('user not found!', 404);
+    }
+    return result.rows[0];
+}

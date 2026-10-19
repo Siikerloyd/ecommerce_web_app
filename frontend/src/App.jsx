@@ -1,19 +1,30 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginForm } from "./pages/LoginForm";
 import { RegisterForm } from "./pages/RegisterForm";
 import Home from "./pages/Home";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/register" element={<RegisterForm BRAND="ZENTO" />} />
-        <Route path="/login" element={<LoginForm />} />
-        <Route path="/home" element={<Home />} />
-      </Routes>
-    </BrowserRouter>
-  );
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Navigate to="/login" replace />} />
+
+                <Route
+                    path="/register"
+                    element={<RegisterForm BRAND="ZENTO" />}
+                />
+
+                <Route path="/login" element={<LoginForm />} />
+
+                {/* Protected pages */}
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/home" element={<Home />} />
+                </Route>
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;

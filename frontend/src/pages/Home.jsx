@@ -1,9 +1,12 @@
+
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 
 export function Home() {
-
-    const { user, token } = useContext(AuthContext);
+     const { user, logout } = useContext(AuthContext);
+const navigate = useNavigate();
 
     useEffect(() => {
         async function getProducts() {
@@ -12,26 +15,34 @@ export function Home() {
                 "http://localhost:8080/api/delivery",
                 {
                     method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
+                    credentials: "include"
                 }
             );
+
             const data = await response.json();
 
-        console.log(data);
-
+            console.log(data);
         }
 
         getProducts();
 
     }, []);
-
-   
+     const handleLogout = async () => {
+        try {
+            await logout();
+            navigate("/login", { replace: true });
+        } catch {
+            // Keep the user on the page if logout failed.
+        }
+    };
 
     return (
-        <h1>Welcome to Home</h1>
+        <>
+            <h1>Welcome to Home</h1>
+            <button onClick={handleLogout}>
+                Logout
+            </button>
+        </>
     );
 }
 

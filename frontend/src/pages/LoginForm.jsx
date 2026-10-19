@@ -128,7 +128,7 @@ export function LoginForm(props) {
   const [error, setError] = useState("");
   const [greeting] = useState(getGreeting);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { setUser, setToken } = useContext(AuthContext);
+  const { setUser } = useContext(AuthContext);
   const [serverError, setServerError] = useState(null);
   //redirect 
   const navigate = useNavigate();
@@ -152,6 +152,7 @@ export function LoginForm(props) {
     try {
       const response = await fetch("http://localhost:8080/api/login", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -171,15 +172,16 @@ export function LoginForm(props) {
 
         return;
       }
-      // Make sure the successful response contains what we need
-      if (!data.user || !data.token) {
+      // Make sure the successful response contains the user
+      if (!data.user) {
         setServerError("Invalid response from server. Please try again.");
         return;
       }
 
       // Login succeeded
       setUser(data.user);
-      setToken(data.token);
+      console.log(data.user);
+
       navigate("/home");
     } catch (error) {
       // Network failure, backend offline, invalid JSON, etc.
