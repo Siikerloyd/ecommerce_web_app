@@ -1,7 +1,16 @@
+# Dependencies
+node_modules/
 backend/node_modules/
+frontend/node_modules/
+
+# Environment variables
 backend/.env
+
+# Database backups
 database/backup/
+
+# Keys and certificates
 keys/
 
-frontend/node_modules/
+# Frontend build output
 frontend/dist/
