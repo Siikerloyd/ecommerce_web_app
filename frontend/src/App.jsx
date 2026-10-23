@@ -1,12 +1,14 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { LoginForm } from "./pages/LoginForm";
-import { RegisterForm } from "./pages/RegisterForm";
+import { LoginForm } from "./components/auth/LoginForm";
+import { RegisterForm } from "./components/auth/RegisterForm";
 import Home from "./pages/Home";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { HomePage } from "./pages/home2";
+import ProtectedRoute from "./components/layout/ProtectedRoute";
 
 function App() {
     return (
+        
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
@@ -18,12 +20,13 @@ function App() {
 
                 <Route path="/login" element={<LoginForm />} />
 
-                {/* Protected pages */}
+                
                 <Route element={<ProtectedRoute />}>
-                    <Route path="/home" element={<Home />} />
+                    <Route path="/home" element={<HomePage />} />
                 </Route>
             </Routes>
         </BrowserRouter>
+        
     );
 }
 

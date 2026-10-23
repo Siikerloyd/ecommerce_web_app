@@ -7,12 +7,25 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const apiFetch = useCallback(async (url, options = {}) => {
+        const response = await fetch(url, {
+            ...options,
+            credentials: "include"
+        });
+
+        if (response.status === 401) {
+            setUser(null);
+        }
+
+        return response;
+    }, []);
+
     const checkSession = useCallback(async () => {
         try {
-            const response = await fetch("http://localhost:8080/api/me", {
-                method: "GET",
-                credentials: "include"
-            });
+            const response = await apiFetch(
+                "http://localhost:8080/api/me",
+                { method: "GET" }
+            );
 
             if (!response.ok) {
                 setUser(null);
@@ -27,17 +40,21 @@ export function AuthProvider({ children }) {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [apiFetch]);
 
     useEffect(() => {
         checkSession();
     }, [checkSession]);
+
     const logout = async () => {
         try {
-            const response = await fetch("http://localhost:8080/api/logout", {
-                method: "POST",
-                credentials: "include"
-            });
+            const response = await fetch(
+                "http://localhost:8080/api/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
 
             if (!response.ok) {
                 throw new Error("Logout failed");
@@ -50,10 +67,16 @@ export function AuthProvider({ children }) {
         }
     };
 
-
     return (
         <AuthContext.Provider
-            value={{ user, setUser, isLoading, checkSession,logout }}
+            value={{
+                user,
+                setUser,
+                isLoading,
+                checkSession,
+                logout,
+                apiFetch
+            }}
         >
             {children}
         </AuthContext.Provider>

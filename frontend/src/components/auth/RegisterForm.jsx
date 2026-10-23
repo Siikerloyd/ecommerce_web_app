@@ -1,6 +1,5 @@
 import { useState } from "react";
-import "../LoginForm.css";
-import "../RegisterForm.css";
+import "./RegisterForm.css";
 import { useNavigate } from "react-router-dom";
 import {
   MailIcon,

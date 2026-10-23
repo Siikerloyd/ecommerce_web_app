@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
-import "../LoginForm.css";
-import { AuthContext } from "../context/AuthContext";
+import "./LoginForm.css";
+import { AuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 

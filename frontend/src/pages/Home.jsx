@@ -1,33 +1,41 @@
 
 import { useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import { AuthContext } from "../context/AuthContext";
 
 export function Home() {
-     const { user, logout } = useContext(AuthContext);
-const navigate = useNavigate();
+    const { logout, apiFetch } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function getProducts() {
+            try {
+                const response = await apiFetch(
+                    "http://localhost:8080/api/delivery",
+                    { method: "GET" }
+                );
 
-            const response = await fetch(
-                "http://localhost:8080/api/delivery",
-                {
-                    method: "GET",
-                    credentials: "include"
+                if (!response.ok) {
+                    if (response.status !== 401) {
+                        console.error(
+                            "Failed to fetch products:",
+                            response.status
+                        );
+                    }
+                    return;
                 }
-            );
 
-            const data = await response.json();
-
-            console.log(data);
+                const data = await response.json();
+                console.log(data);
+            } catch (error) {
+                console.error("Failed to fetch products:", error);
+            }
         }
 
         getProducts();
+    }, [apiFetch]);
 
-    }, []);
-     const handleLogout = async () => {
+    const handleLogout = async () => {
         try {
             await logout();
             navigate("/login", { replace: true });
