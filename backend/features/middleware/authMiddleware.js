@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const path = require('path');
 const pool = require('../../config/connect_database.js');
 
 const publicKey = fs.readFileSync(
-    './keys/public.key',
+    path.join(__dirname, '../../keys/public.pem'),
     'utf8'
 );
 

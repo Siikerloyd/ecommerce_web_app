@@ -19,6 +19,11 @@ router.patch(
     cartController.updateCartItems
 );
 
+router.delete(
+    "/cart/items",
+    verifyToken,
+    cartController.clearCart
+);
 
 router.delete(
     "/cart/items/:cartItemId",

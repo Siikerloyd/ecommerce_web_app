@@ -17,12 +17,26 @@ exports.getCart = async (userId) => {
             p.price,
             p.stock_quantity,
             p.status,
+            b.brand_name,
+            category.category_name,
+            image.image_url,
             p.price * ci.quantity AS subtotal
         FROM carts c
         JOIN cart_items ci
             ON ci.cart_id = c.cart_id
         JOIN products p
             ON p.product_id = ci.product_id
+        LEFT JOIN brands b
+            ON b.brand_id = p.brand_id
+        LEFT JOIN categories category
+            ON category.category_id = p.category_id
+        LEFT JOIN LATERAL (
+            SELECT image_url
+            FROM product_images
+            WHERE product_id = p.product_id
+            ORDER BY is_primary DESC, image_id
+            LIMIT 1
+        ) image ON true
         WHERE c.user_id = $1;
         `,
         [userId]
@@ -245,4 +259,19 @@ exports.deleteCartItem = async (cartItemId, userId) => {
     }
 
     return result.rows[0];
+};
+
+exports.clearCart = async (userId) => {
+    const result = await pool.query(
+        `
+        DELETE FROM cart_items ci
+        USING carts c
+        WHERE ci.cart_id = c.cart_id
+        AND c.user_id = $1
+        RETURNING ci.cart_item_id;
+        `,
+        [userId]
+    );
+
+    return { deleted_count: result.rowCount };
 };

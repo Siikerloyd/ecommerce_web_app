@@ -3,6 +3,5 @@ CREATE TABLE IF NOT EXISTS categories (
     category_name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     parent_category_id INT REFERENCES categories(category_id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

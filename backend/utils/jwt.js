@@ -1,8 +1,9 @@
 const fs = require('fs');
+const path = require('path');
 const jwt = require('jsonwebtoken');
 
 const privateKey = fs.readFileSync(
-    './keys/private.key',
+    path.join(__dirname, '../keys/private.pem'),
     'utf8'
 );
 
