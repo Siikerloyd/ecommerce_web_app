@@ -1,5 +1,6 @@
 import React from "react";
-import "./home2.css";
+import { Link } from "react-router-dom";
+import "./HomePage.css";
 
 const BRAND = "ZENTO";
 
@@ -128,7 +129,7 @@ export function HomePage() {
           <a href="#home" className="is-active">
             Home
           </a>
-          <a href="#shop">Shop</a>
+          <Link to="/shop">Shop</Link>
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
         </nav>
@@ -162,10 +163,10 @@ export function HomePage() {
           </p>
 
           <div className="hp-hero-actions">
-            <a href="#shop" className="hp-cta">
+            <Link to="/shop" className="hp-cta">
               Shop the collection
               <ArrowIcon size={18} />
-            </a>
+            </Link>
             <a href="#about" className="hp-cta-ghost">
               Our story
             </a>

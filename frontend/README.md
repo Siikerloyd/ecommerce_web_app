@@ -1,5 +1,23 @@
 # React + Vite
 
+## Source layout
+
+Application code is grouped by feature under `src/features`:
+
+- `auth` — login, registration, session context, and protected routes.
+- `cart` — cart context, cart controls, drawer, and cart page.
+- `catalog` and `products` — shop and product-detail pages.
+- `checkout` — checkout page and its mock-only data.
+- `home` — homepage and the retained legacy home component.
+
+`src/App.jsx` owns route composition; `src/main.jsx` mounts the providers and
+application. Feature-local styles live beside their components or pages.
+
+## Development
+
+Run `npm run dev` from `frontend/`. Use `npm run lint` and `npm run build` to
+check the frontend.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

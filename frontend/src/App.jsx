@@ -1,14 +1,15 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { LoginForm } from "./components/auth/LoginForm";
-import { RegisterForm } from "./components/auth/RegisterForm";
-import { HomePage } from "./pages/home2";
-import ProtectedRoute from "./components/layout/ProtectedRoute";
-import Shop from "./pages/Shop";
-import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
-import { CartProvider } from "./context/CartContext.jsx";
-import MiniCartDrawer from "./components/cart/MiniCartDrawer";
+import { LoginForm } from "./features/auth/pages/LoginForm";
+import { RegisterForm } from "./features/auth/pages/RegisterForm";
+import ProtectedRoute from "./features/auth/components/ProtectedRoute";
+import { HomePage } from "./features/home/pages/HomePage";
+import Shop from "./features/catalog/pages/Shop";
+import ProductDetail from "./features/products/pages/ProductDetail";
+import Cart from "./features/cart/pages/Cart";
+import Checkout from "./features/checkout/pages/Checkout";
+import { CartProvider } from "./features/cart/context/CartContext.jsx";
+import MiniCartDrawer from "./features/cart/components/MiniCartDrawer";
 
 function App() {
     return (
@@ -27,6 +28,7 @@ function App() {
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/products/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<Cart />} />
+                    <Route path="/checkout" element={<Checkout />} />
 
                     <Route element={<ProtectedRoute />}>
                         <Route path="/home" element={<HomePage />} />

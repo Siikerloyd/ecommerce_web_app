@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import CartButton from "../components/cart/CartButton";
-import { useCart } from "../hooks/useCart";
+import CartButton from "../../cart/components/CartButton";
+import { useCart } from "../../cart/hooks/useCart";
 import "./product-detail.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";

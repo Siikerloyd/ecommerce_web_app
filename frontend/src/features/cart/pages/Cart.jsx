@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import CartButton from "../components/cart/CartButton";
+import CartButton from "../components/CartButton";
 import { useCart } from "../hooks/useCart";
-import "../components/cart/cart.css";
+import "../components/cart.css";
 
 function formatPrice(price) {
   return new Intl.NumberFormat("en-US", {

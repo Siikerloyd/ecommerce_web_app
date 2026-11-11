@@ -14,7 +14,7 @@ import {
   HeadsetIcon,
   GoogleIcon,
   AppleIcon,
-} from "./AuthIcons";
+} from "../components/AuthIcons";
 
 function getGreeting() {
   const hour = new Date().getHours();

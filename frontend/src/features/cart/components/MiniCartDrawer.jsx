@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../../hooks/useCart";
+import { useCart } from "../hooks/useCart";
 import "./cart.css";
 
 function formatPrice(price) {

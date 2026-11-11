@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "../../auth/context/AuthContext";
 import { CartContext } from "./cartContextStore.js";
 
 const STORAGE_KEY = "zento-cart";
