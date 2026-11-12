@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import CartButton from "../components/CartButton";
 import { useCart } from "../hooks/useCart";
@@ -82,10 +81,9 @@ export default function Cart() {
     isAuthenticated,
     isCartLoading,
     cartError,
+    cartWarning,
     retryCartSync,
   } = useCart();
-  const [checkoutNotice, setCheckoutNotice] = useState("");
-
   const clearItems = () => {
     if (window.confirm("Clear all items from your shopping cart?")) clearCart();
   };
@@ -120,8 +118,12 @@ export default function Cart() {
           </p>
         )}
         {!isAuthenticated && !isCartLoading && (
-          <p className="zcp-cart-message">
-            Your bag is saved on this device. <Link to="/login">Sign in</Link> to sync it with your account.
+          <p
+            className={`zcp-cart-message${cartWarning ? " is-warning" : ""}`}
+            role={cartWarning ? "alert" : undefined}
+          >
+            {cartWarning || "Your bag is saved on this device."}{" "}
+            <Link to="/login">Sign in</Link> to save it to your account.
           </p>
         )}
         {isCartLoading && <p className="zcp-cart-message" role="status">Loading your saved cart...</p>}
@@ -163,15 +165,12 @@ export default function Cart() {
               <div className="zcp-summary-line"><span>Shipping</span><span className="zcp-later">Calculated later</span></div>
               <div className="zcp-summary-total"><span>Total before shipping</span><strong>{formatPrice(subtotal)}</strong></div>
               <p className="zcp-summary-note">Shipping and applicable charges will be confirmed when checkout is available.</p>
-              {/* TODO(wire): Navigate to checkout when the route and order flow exist. */}
-              <button
+              <Link
                 className="zcp-button zcp-button-primary zcp-checkout"
-                type="button"
-                onClick={() => setCheckoutNotice("Checkout is not connected yet. No order has been placed.")}
+                to="/checkout"
               >
                 Continue to checkout <ArrowIcon />
-              </button>
-              {checkoutNotice && <p className="zcp-checkout-notice" role="status">{checkoutNotice}</p>}
+              </Link>
               <div className="zcp-summary-mark"><span>01</span> Thoughtfully chosen. Yours to keep.</div>
             </aside>
           </div>

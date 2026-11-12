@@ -27,6 +27,7 @@ export default function MiniCartDrawer() {
     isAuthenticated,
     isCartLoading,
     cartError,
+    cartWarning,
     retryCartSync,
     updateQuantity,
     removeItem,
@@ -104,8 +105,12 @@ export default function MiniCartDrawer() {
           </p>
         )}
         {!isAuthenticated && !isCartLoading && (
-          <p className="zcart-message">
-            Saved on this device. <Link to="/login" onClick={closeCart}>Sign in</Link> to sync your bag.
+          <p
+            className={`zcart-message${cartWarning ? " is-warning" : ""}`}
+            role={cartWarning ? "alert" : undefined}
+          >
+            {cartWarning || "Your bag is saved on this device."}{" "}
+            <Link to="/login" onClick={closeCart}>Sign in</Link> to save it to your account.
           </p>
         )}
         {isCartLoading && <p className="zcart-message" role="status">Loading your saved cart...</p>}

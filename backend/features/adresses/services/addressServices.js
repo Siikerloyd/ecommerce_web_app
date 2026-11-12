@@ -2,25 +2,43 @@ const pool = require('../../../config/connect_database.js');
 const AppError = require('../../../utils/AppError.js');
 
 exports.createAddress = async (userId, data) => {
-    const value = data.is_default ?? false;
+    let client;
 
-    const query = await pool.query(`
-        INSERT INTO addresses
-        (user_id, title, street, city, postal_code, country, phone_number, is_default)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING *
-    `, [
-        userId,
-        data.title,
-        data.street,
-        data.city,
-        data.postal_code,
-        data.country,
-        data.phone_number,
-        value
-    ]);
+    try {
+        client = await pool.connect();
+        await client.query("BEGIN");
 
-    return query.rows[0];
+        if (data.is_default === true) {
+            await client.query(
+                `UPDATE addresses SET is_default = false WHERE user_id = $1`,
+                [userId]
+            );
+        }
+
+        const query = await client.query(`
+            INSERT INTO addresses
+            (user_id, title, street, city, postal_code, country, phone_number, is_default)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `, [
+            userId,
+            data.title,
+            data.street,
+            data.city,
+            data.postal_code,
+            data.country,
+            data.phone_number,
+            data.is_default ?? false
+        ]);
+
+        await client.query("COMMIT");
+        return query.rows[0];
+    } catch (error) {
+        if (client) await client.query("ROLLBACK");
+        throw error;
+    } finally {
+        if (client) client.release();
+    }
 };
 
 

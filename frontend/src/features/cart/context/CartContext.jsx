@@ -4,31 +4,36 @@ import { CartContext } from "./cartContextStore.js";
 
 const STORAGE_KEY = "zento-cart";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const GUEST_STORAGE_WARNING =
+  "Your bag could not be saved on this device and may be lost when you leave or refresh.";
 
 function readStoredCart() {
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (!saved) return [];
+    if (!saved) return { items: [], storageError: false };
 
     const items = JSON.parse(saved);
     if (!Array.isArray(items)) {
       console.warn("Saved cart data is not a list. Starting with an empty cart.");
-      return [];
+      return { items: [], storageError: true };
     }
 
-    return items.filter(
-      (item) =>
-        item &&
-        item.product_id !== undefined &&
-        item.name &&
-        Number.isFinite(Number(item.price)) &&
-        Number(item.price) >= 0 &&
-        Number.isInteger(Number(item.quantity)) &&
-        Number(item.quantity) >= 1,
-    );
+    return {
+      items: items.filter(
+        (item) =>
+          item &&
+          item.product_id !== undefined &&
+          item.name &&
+          Number.isFinite(Number(item.price)) &&
+          Number(item.price) >= 0 &&
+          Number.isInteger(Number(item.quantity)) &&
+          Number(item.quantity) >= 1,
+      ),
+      storageError: false,
+    };
   } catch (error) {
     console.error("Could not read the saved cart:", error);
-    return [];
+    return { items: [], storageError: true };
   }
 }
 
@@ -81,15 +86,21 @@ function getErrorMessage(error) {
 function saveGuestCart(items) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    return true;
   } catch (error) {
     console.error("Could not save the cart to local storage:", error);
+    return false;
   }
 }
 
 export function CartProvider({ children }) {
   const { user, isLoading: isAuthLoading } = useContext(AuthContext);
   const userId = user?.user_id ?? null;
-  const [items, setItems] = useState(readStoredCart);
+  const [initialCart] = useState(readStoredCart);
+  const [items, setItems] = useState(initialCart.items);
+  const [cartWarning, setCartWarning] = useState(
+    initialCart.storageError ? GUEST_STORAGE_WARNING : "",
+  );
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCartSyncing, setIsCartSyncing] = useState(false);
   const [settledAttempt, setSettledAttempt] = useState(-1);
@@ -98,6 +109,7 @@ export function CartProvider({ children }) {
   const [syncAttempt, setSyncAttempt] = useState(0);
   const activeUserId = useRef(null);
   const skipGuestPersistence = useRef(false);
+  const skipInitialGuestPersistence = useRef(true);
   const syncSequence = useRef(0);
   const isCartLoading = isAuthLoading || (
     Boolean(userId) &&
@@ -113,15 +125,19 @@ export function CartProvider({ children }) {
       if (leavingAccount) {
         activeUserId.current = null;
         skipGuestPersistence.current = true;
-        try {
-          window.localStorage.setItem(STORAGE_KEY, "[]");
-        } catch (error) {
-          console.error("Could not clear the saved cart:", error);
-        }
       }
       const settleGuestCart = async () => {
         await Promise.resolve();
         if (sequence !== syncSequence.current) return;
+        if (leavingAccount) {
+          try {
+            window.localStorage.setItem(STORAGE_KEY, "[]");
+            setCartWarning("");
+          } catch (error) {
+            console.error("Could not clear the saved cart:", error);
+            setCartWarning(GUEST_STORAGE_WARNING);
+          }
+        }
         if (leavingAccount) setItems([]);
         setCartError("");
         setIsCartSyncing(false);
@@ -134,7 +150,7 @@ export function CartProvider({ children }) {
 
     const previousUserId = activeUserId.current;
     activeUserId.current = userId;
-    const guestItems = readStoredCart();
+    const guestItems = readStoredCart().items;
 
     const syncCart = async () => {
       await Promise.resolve();
@@ -197,14 +213,33 @@ export function CartProvider({ children }) {
     if (isAuthLoading || userId) return;
     if (skipGuestPersistence.current) {
       skipGuestPersistence.current = false;
+      skipInitialGuestPersistence.current = false;
+      return;
+    }
+    if (skipInitialGuestPersistence.current) {
+      skipInitialGuestPersistence.current = false;
       return;
     }
 
-    try {
-      saveGuestCart(items);
-    } catch (error) {
-      console.error("Could not save the cart to local storage:", error);
+    let isActive = true;
+    async function persistGuestCart() {
+      await Promise.resolve();
+      if (!isActive) return;
+
+      try {
+        setCartWarning(
+          saveGuestCart(items) ? "" : GUEST_STORAGE_WARNING,
+        );
+      } catch (error) {
+        console.error("Could not save the cart to local storage:", error);
+        setCartWarning(GUEST_STORAGE_WARNING);
+      }
     }
+
+    persistGuestCart();
+    return () => {
+      isActive = false;
+    };
   }, [items, isAuthLoading, userId]);
 
   const refreshRemoteCart = useCallback(async () => {
@@ -300,7 +335,9 @@ export function CartProvider({ children }) {
             : cartItem,
         );
         setItems(nextItems);
-        saveGuestCart(nextItems);
+        setCartWarning(
+          saveGuestCart(nextItems) ? "" : GUEST_STORAGE_WARNING,
+        );
         return { ok: true };
       }
       if (cartError) {
@@ -344,7 +381,9 @@ export function CartProvider({ children }) {
           (cartItem) => Number(cartItem.product_id) !== Number(productId),
         );
         setItems(nextItems);
-        saveGuestCart(nextItems);
+        setCartWarning(
+          saveGuestCart(nextItems) ? "" : GUEST_STORAGE_WARNING,
+        );
         return { ok: true };
       }
       if (cartError) {
@@ -408,7 +447,9 @@ export function CartProvider({ children }) {
       isCartLoading,
       isAuthenticated: Boolean(userId),
       cartError,
+      cartWarning,
       retryCartSync,
+      refreshRemoteCart,
       addItem,
       updateQuantity,
       removeItem,
@@ -424,7 +465,9 @@ export function CartProvider({ children }) {
       isCartLoading,
       userId,
       cartError,
+      cartWarning,
       retryCartSync,
+      refreshRemoteCart,
       addItem,
       updateQuantity,
       removeItem,

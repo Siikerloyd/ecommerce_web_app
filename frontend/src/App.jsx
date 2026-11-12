@@ -8,6 +8,7 @@ import Shop from "./features/catalog/pages/Shop";
 import ProductDetail from "./features/products/pages/ProductDetail";
 import Cart from "./features/cart/pages/Cart";
 import Checkout from "./features/checkout/pages/Checkout";
+import Account from "./features/account/pages/Account";
 import { CartProvider } from "./features/cart/context/CartContext.jsx";
 import MiniCartDrawer from "./features/cart/components/MiniCartDrawer";
 
@@ -28,9 +29,10 @@ function App() {
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/products/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={<Checkout />} />
 
                     <Route element={<ProtectedRoute />}>
+                        <Route path="/account" element={<Account />} />
+                        <Route path="/checkout" element={<Checkout />} />
                         <Route path="/home" element={<HomePage />} />
                     </Route>
                 </Routes>

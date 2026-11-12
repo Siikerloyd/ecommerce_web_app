@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import CartButton from "../../cart/components/CartButton";
+import { AuthContext } from "../../auth/context/AuthContext";
 import { useCart } from "../../cart/hooks/useCart";
 import "./shop.css";
 
@@ -243,6 +244,7 @@ function FilterOptions({
 export default function Shop() {
   const [searchParams] = useSearchParams();
   const { addItem, openCart } = useCart();
+  const { user } = useContext(AuthContext);
   const categoryParam = searchParams.get("category");
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -482,7 +484,9 @@ export default function Shop() {
           <a href="#the-edit">The edit</a>
         </nav>
         <div className="zs-header-actions">
-          <Link className="zs-account-link" to="/login">Sign in</Link>
+          <Link className="zs-account-link" to={user ? "/account" : "/login"}>
+            {user ? "Account" : "Sign in"}
+          </Link>
           <CartButton className="zs-bag-button" />
         </div>
       </header>

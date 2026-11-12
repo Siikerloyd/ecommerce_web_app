@@ -76,6 +76,11 @@
   color: #ffaaa3;
 }
 
+.zcart-message.is-warning,
+.zcp-cart-message.is-warning {
+  color: #f2d89d;
+}
+
 .zcart-eyebrow,
 .zcp-eyebrow {
   margin: 0;

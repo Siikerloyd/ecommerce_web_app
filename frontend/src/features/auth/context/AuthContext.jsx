@@ -1,6 +1,9 @@
 
 import { createContext, useState, useEffect, useCallback } from "react";
 
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -23,7 +26,7 @@ export function AuthProvider({ children }) {
     const checkSession = useCallback(async () => {
         try {
             const response = await apiFetch(
-                "http://localhost:8080/api/me",
+                `${API_BASE_URL}/api/me`,
                 { method: "GET" }
             );
 
@@ -49,7 +52,7 @@ export function AuthProvider({ children }) {
     const logout = async () => {
         try {
             const response = await fetch(
-                "http://localhost:8080/api/logout",
+                `${API_BASE_URL}/api/logout`,
                 {
                     method: "POST",
                     credentials: "include"

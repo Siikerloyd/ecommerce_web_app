@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import "./LoginForm.css";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 
 //const BRAND = "ZENTO";
@@ -123,6 +123,8 @@ const AppleIcon = () => (
 );
 
 export function LoginForm(props) {
+  const location = useLocation();
+  const returnTo = location.state?.from?.pathname || "/home";
   const [form, setForm] = useState({ email: "", password: "", remember: false });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -182,7 +184,7 @@ export function LoginForm(props) {
       setUser(data.user);
       console.log(data.user);
 
-      navigate("/home");
+      navigate(returnTo, { replace: true });
     } catch (error) {
       // Network failure, backend offline, invalid JSON, etc.
       console.error("Login request failed:", error);

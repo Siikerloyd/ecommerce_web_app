@@ -124,6 +124,14 @@ exports.createOrder = async (userId, data) => {
             RETURNING *`, [orderNumber, userId, data.address_id, total]);
         //after creating the order we create order items this way we can store the product price in that time even if it changes later in the future 
         const orderId = order.rows[0].order_id;
+        const payment = await client.query(
+            `
+            INSERT INTO payments(order_id, payment_method, amount)
+            VALUES ($1, $2, $3)
+            RETURNING *
+            `,
+            [orderId, data.payment_method ?? "CASH_ON_DELIVERY", total]
+        );
         // create initial order status history
         await client.query(
             `
@@ -186,7 +194,8 @@ exports.createOrder = async (userId, data) => {
         //we return api response   
         return {
             order: order.rows[0],
-            items: orderItems.rows
+            items: orderItems.rows,
+            payment: payment.rows[0]
         };
     } catch (error) {
         //if client used and any querry fails or an error thrown we rollback

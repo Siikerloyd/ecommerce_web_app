@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import CartButton from "../../cart/components/CartButton";
 import { useCart } from "../../cart/hooks/useCart";
-import {
-  checkoutMockAddresses,
-  checkoutPaymentMethods,
-  mockDeliveryEstimate,
-} from "../mock/checkout";
+import { checkoutPaymentMethods } from "../mock/checkout";
 import "./checkout.css";
 
 const STEPS = ["Delivery", "Payment", "Review"];
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
+// Formats numeric prices consistently for the checkout UI.
 function formatPrice(value) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -18,6 +17,7 @@ function formatPrice(value) {
   }).format(Number(value) || 0);
 }
 
+// Renders the small arrow used by checkout navigation buttons.
 function ArrowIcon() {
   return (
     <svg
@@ -37,6 +37,7 @@ function ArrowIcon() {
   );
 }
 
+// Renders a check mark for completed checkout steps.
 function CheckIcon() {
   return (
     <svg
@@ -55,7 +56,9 @@ function CheckIcon() {
   );
 }
 
+// Collects an address and validates it before passing it to the parent.
 function AddressForm({ onSave, onCancel }) {
+  // Holds the values currently typed into the address form.
   const [values, setValues] = useState({
     title: "",
     street: "",
@@ -65,8 +68,10 @@ function AddressForm({ onSave, onCancel }) {
     phone_number: "",
     is_default: false,
   });
+  // Holds validation messages, keyed by the corresponding input name.
   const [errors, setErrors] = useState({});
 
+  // Updates one form value and clears that field's old validation message.
   function updateField(event) {
     const { name, value, checked, type } = event.target;
     setValues((current) => ({
@@ -76,6 +81,7 @@ function AddressForm({ onSave, onCancel }) {
     setErrors((current) => ({ ...current, [name]: "" }));
   }
 
+  // Prevents submission when required address fields are invalid.
   function handleSubmit(event) {
     event.preventDefault();
     const nextErrors = {};
@@ -217,7 +223,7 @@ function AddressForm({ onSave, onCancel }) {
           checked={values.is_default}
           onChange={updateField}
         />
-        <span>Use as my default address in this preview</span>
+        <span>Use as my default address</span>
       </label>
       <div className="zc-form-actions">
         <button className="zc-button zc-button-dark" type="submit">
@@ -228,6 +234,7 @@ function AddressForm({ onSave, onCancel }) {
   );
 }
 
+// Renders one product in the order summary.
 function CheckoutItem({ item }) {
   return (
     <article className="zc-item">
@@ -257,6 +264,7 @@ function CheckoutItem({ item }) {
   );
 }
 
+// Shows checkout stages and lets the user return to completed stages.
 function ProgressSteps({ activeStep, onStepChange }) {
   return (
     <nav className="zc-progress" aria-label="Checkout progress">
@@ -284,6 +292,7 @@ function ProgressSteps({ activeStep, onStepChange }) {
   );
 }
 
+// Owns checkout state, loads saved addresses, and renders the checkout stages.
 export default function Checkout() {
   const {
     items,
@@ -292,39 +301,123 @@ export default function Checkout() {
     isCartLoading,
     cartError,
     retryCartSync,
+    refreshRemoteCart,
   } = useCart();
-  // TODO(wire): Load and save addresses through GET/POST /api/addresses when integration is in scope.
-  const [addresses, setAddresses] = useState(checkoutMockAddresses);
-  const [selectedAddressId, setSelectedAddressId] = useState(
-    checkoutMockAddresses.find((address) => address.is_default)?.address_id ?? null,
-  );
+  // Stores addresses returned by the authenticated GET /api/addresses endpoint.
+  const [addresses, setAddresses] = useState([]);
+  // Stores the ID of the address currently selected for this checkout.
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  // Stores the payment method that will be recorded as pending with the order.
   const [selectedPayment, setSelectedPayment] = useState("CASH_ON_DELIVERY");
+  // Tracks which checkout stage is visible: delivery, payment, or review.
   const [activeStep, setActiveStep] = useState(1);
+  // Controls whether the new-address form is shown.
   const [isAddressFormOpen, setIsAddressFormOpen] = useState(false);
+  // Holds checkout validation, request errors, and order success messages.
   const [checkoutNotice, setCheckoutNotice] = useState("");
+  // Indicates that the saved-address request is still in progress.
+  const [isAddressLoading, setIsAddressLoading] = useState(true);
+  // Holds an error message if the saved-address request fails.
+  const [addressError, setAddressError] = useState("");
+
+  const [createdOrder, setCreatedOrder] = useState(null);
+
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+
+  // Loads this signed-in user's addresses once when Checkout first appears.
+  useEffect(() => {
+    let isMounted = true;
+
+    // Requests the address list and puts the server response into React state.
+    async function getAddresses() {
+      setIsAddressLoading(true);
+      setAddressError("");
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/addresses`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || `Could not load addresses (${response.status}).`);
+        }
+        if (!Array.isArray(data.result)) {
+          throw new Error("The addresses response was not in the expected format.");
+        }
+        if (!isMounted) return;
+
+        setAddresses(data.result);
+        const defaultAddress = data.result.find((address) => address.is_default);
+        setSelectedAddressId(defaultAddress?.address_id ?? null);
+      } catch (error) {
+        if (!isMounted) return;
+
+        console.error("Could not load checkout addresses:", error);
+        setAddressError(
+          error instanceof Error ? error.message : "Could not load addresses.",
+        );
+      } finally {
+        if (isMounted) setIsAddressLoading(false);
+      }
+    }
+
+    getAddresses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const selectedAddress = addresses.find(
     (address) => address.address_id === selectedAddressId,
   );
-  // TODO(wire): Replace this sample amount when the backend defines a customer delivery quote.
-  const deliveryEstimate = items.length > 0 ? mockDeliveryEstimate : 0;
-  const total = Number(subtotal) + deliveryEstimate;
   const isCheckoutUnavailable =
     isCartLoading || Boolean(cartError) || items.length === 0;
 
-  function saveAddress(address) {
-    const nextId = Math.max(0, ...addresses.map((entry) => entry.address_id)) + 1;
-    const nextAddresses = addresses.map((entry) => ({
-      ...entry,
-      is_default: address.is_default ? false : entry.is_default,
-    }));
-    const newAddress = { ...address, address_id: nextId };
-    setAddresses([...nextAddresses, newAddress]);
-    setSelectedAddressId(nextId);
-    setIsAddressFormOpen(false);
-    setCheckoutNotice("");
+  // Saves the form address through the API and selects the address returned by the server.
+  async function saveAddress(address) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/addresses`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(address),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `Could not save address (${response.status}).`);
+      }
+      if (!data.result?.address_id) {
+        throw new Error("The saved address was not returned in the expected format.");
+      }
+
+      const savedAddress = data.result;
+      setAddresses((currentAddresses) => [
+        ...currentAddresses.map((currentAddress) => ({
+          ...currentAddress,
+          is_default: savedAddress.is_default
+            ? false
+            : currentAddress.is_default,
+        })),
+        savedAddress,
+      ]);
+      setSelectedAddressId(savedAddress.address_id);
+      setIsAddressFormOpen(false);
+      setCheckoutNotice("");
+    } catch (error) {
+      console.error("Could not save checkout address:", error);
+      setCheckoutNotice(
+        error instanceof Error ? error.message : "Could not save address.",
+      );
+    }
   }
 
+  // Requires an address selection before showing the payment stage.
   function continueToPayment() {
     if (!selectedAddress) {
       setCheckoutNotice("Choose or add a delivery address to continue.");
@@ -334,11 +427,13 @@ export default function Checkout() {
     setActiveStep(2);
   }
 
+  // Changes the visible stage and clears any old checkout notice.
   function goToStep(step) {
     setCheckoutNotice("");
     setActiveStep(step);
   }
 
+  // Requires a payment selection before showing the review stage.
   function continueToReview() {
     if (!selectedPayment) {
       setCheckoutNotice("Choose a payment method to continue.");
@@ -348,12 +443,58 @@ export default function Checkout() {
     setActiveStep(3);
   }
 
-  function showMockConfirmation() {
-    // TODO(wire): Submit the selected address and cart to the authenticated order endpoint.
-    // TODO(wire): Connect payment method selection only after a payment flow is implemented.
-    setCheckoutNotice(
-      "Preview only — no order was created and no payment was taken.",
-    );
+  // Creates an order from the signed-in user's backend cart and selected address.
+  async function showConfirmation() {
+    if (!selectedAddressId) {
+      setCheckoutNotice("Choose a delivery address before placing your order.");
+      return;
+    }
+
+    if (isSubmittingOrder || createdOrder) return;
+
+    setIsSubmittingOrder(true);
+    setCheckoutNotice("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          address_id: Number(selectedAddressId),
+          payment_method: selectedPayment,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || `Could not create order (${response.status}).`);
+      }
+      if (!data.result?.order) {
+        throw new Error("The order response was not in the expected format.");
+      }
+
+      setCreatedOrder(data.result);
+
+      try {
+        await refreshRemoteCart();
+      } catch (error) {
+        console.error("Order was created, but the cart could not be refreshed:", error);
+        setCheckoutNotice(
+          "Your order was created, but your bag could not refresh. Reload the page to check it.",
+        );
+      }
+    } catch (error) {
+      console.error("Could not create checkout order:", error);
+      setCheckoutNotice(
+        error instanceof Error ? error.message : "Could not create your order.",
+      );
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+
   }
 
   return (
@@ -361,7 +502,7 @@ export default function Checkout() {
       <div className="zc-announcement">
         <span>Considered objects</span>
         <i aria-hidden="true" />
-        <span>Mock checkout · sample details · no order will be placed</span>
+        <span>Payment choice is recorded · payment is not processed</span>
       </div>
 
       <header className="zc-header">
@@ -405,7 +546,7 @@ export default function Checkout() {
           <p className="zc-message" role="status">Loading your saved selection…</p>
         )}
 
-        {!isCartLoading && cartError && items.length === 0 ? (
+        {!createdOrder && !isCartLoading && cartError && items.length === 0 ? (
           <section className="zc-empty">
             <span className="zc-empty-mark" aria-hidden="true">Z.</span>
             <div>
@@ -419,6 +560,45 @@ export default function Checkout() {
               >
                 Retry cart sync <ArrowIcon />
               </button>
+            </div>
+          </section>
+        ) : createdOrder ? (
+          <section className="zc-empty" aria-labelledby="zc-order-confirmed-title">
+            <span className="zc-empty-mark" aria-hidden="true">Z.</span>
+            <div>
+              <p className="zc-kicker">Order received</p>
+              <h2 id="zc-order-confirmed-title">Thank you. It’s in our hands.</h2>
+              <p>
+                Order {createdOrder.order.order_number} was created.
+                Payment is pending and has not been processed. Delivery is not
+                included in the order total.
+              </p>
+              <div className="zc-review-block">
+                <strong>Order total: {formatPrice(createdOrder.order.total_price)}</strong>
+                {createdOrder.payment && (
+                  <p className="zc-review-note">
+                    {checkoutPaymentMethods.find(
+                      (method) => method.value === createdOrder.payment.payment_method,
+                    )?.title ?? createdOrder.payment.payment_method}
+                    {" · "}
+                    Payment status: {createdOrder.payment.payment_status}
+                  </p>
+                )}
+                {createdOrder.items.map((item) => (
+                  <div className="zc-review-item" key={item.order_item_id}>
+                    <span>{item.product_name} <i>×{item.quantity}</i></span>
+                    <strong>
+                      {formatPrice(Number(item.price) * Number(item.quantity))}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+              {checkoutNotice && (
+                <p className="zc-message is-error" role="alert">{checkoutNotice}</p>
+              )}
+              <Link className="zc-button zc-button-dark" to="/shop">
+                Return to the collection <ArrowIcon />
+              </Link>
             </div>
           </section>
         ) : !isCartLoading && items.length === 0 ? (
@@ -445,8 +625,17 @@ export default function Checkout() {
                       <h2 id="zc-delivery-title">Delivery address</h2>
                     </div>
                   </div>
+                  {isAddressLoading && (
+                    <p className="zc-message" role="status">Loading saved addresses…</p>
+                  )}
+                  {addressError && (
+                    <p className="zc-message is-error" role="alert">{addressError}</p>
+                  )}
                   <fieldset className="zc-address-list">
                     <legend className="zc-sr-only">Choose a delivery address</legend>
+                    {!isAddressLoading && addresses.length === 0 && !addressError && (
+                      <p>No saved addresses yet. Add one below to continue.</p>
+                    )}
                     {addresses.map((address) => (
                       <label
                         key={address.address_id}
@@ -498,7 +687,8 @@ export default function Checkout() {
                       <strong>Delivery arranged by our team</strong>
                       <span>
                         The project has no customer-selectable delivery service or
-                        configured shipping rate. The amount shown is a mock estimate.
+                        configured shipping quote. Delivery cost is not included in
+                        the order total.
                       </span>
                     </p>
                   </div>
@@ -527,8 +717,8 @@ export default function Checkout() {
                     </div>
                   </div>
                   <p className="zc-stage-intro">
-                    These options match the project’s payment-method schema. Choosing
-                    one here is a local preview only; payment is not connected.
+                    Choose a method to record with your order. It will be saved as
+                    pending; this application does not process payments.
                   </p>
                   <fieldset className="zc-payment-list">
                     <legend className="zc-sr-only">Choose a payment method</legend>
@@ -557,10 +747,10 @@ export default function Checkout() {
                     ))}
                   </fieldset>
                   <div className="zc-payment-disclaimer">
-                    <strong>Nothing is charged here.</strong>
+                    <strong>No payment will be taken here.</strong>
                     <span>
-                      Payment status and transactions are not handled by this checkout
-                      preview.
+                      Your choice is recorded with the order, but card and PayPal
+                      transactions are not processed.
                     </span>
                   </div>
                   <div className="zc-stage-actions">
@@ -622,7 +812,7 @@ export default function Checkout() {
                       <button type="button" onClick={() => goToStep(2)}>Change</button>
                     </div>
                     <p className="zc-review-note">
-                      Preview selection only. No payment will be taken.
+                      Saved with the order as pending. No payment is processed.
                     </p>
                   </div>
                   <div className="zc-review-block zc-review-items">
@@ -657,10 +847,15 @@ export default function Checkout() {
                     <button
                       className="zc-button zc-button-dark"
                       type="button"
-                      disabled={isCheckoutUnavailable || !selectedAddress || !selectedPayment}
-                      onClick={showMockConfirmation}
+                      disabled={isCheckoutUnavailable || !selectedAddress || !selectedPayment || isSubmittingOrder || Boolean(createdOrder)}
+                      onClick={showConfirmation}
                     >
-                      Confirm preview <ArrowIcon />
+                      {isSubmittingOrder
+                        ? "Placing order…"
+                        : createdOrder
+                          ? "Order placed"
+                          : "Place order"}{" "}
+                      {!createdOrder && <ArrowIcon />}
                     </button>
                   </div>
                 </section>
@@ -684,17 +879,17 @@ export default function Checkout() {
               <div className="zc-summary-costs">
                 <div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
                 <div>
-                  <span>Delivery <small>sample estimate</small></span>
-                  <strong>{items.length ? formatPrice(deliveryEstimate) : "—"}</strong>
+                  <span>Delivery <small>quoted separately</small></span>
+                  <strong>Not calculated</strong>
                 </div>
                 <div className="zc-summary-total">
-                  <span>Estimated total <small>USD · mock</small></span>
-                  <strong>{formatPrice(total)}</strong>
+                  <span>Items total <small>USD · before delivery</small></span>
+                  <strong>{formatPrice(subtotal)}</strong>
                 </div>
               </div>
               <p className="zc-summary-disclaimer">
-                All amounts are illustrative USD mock values. No shipping rate is
-                configured in the project.
+                Item prices are from your saved cart. Delivery is not included because
+                the backend does not currently calculate a delivery charge.
               </p>
               {selectedAddress && (
                 <div className="zc-summary-detail">
@@ -711,7 +906,7 @@ export default function Checkout() {
                       (method) => method.value === selectedPayment,
                     )?.title}
                   </strong>
-                  <small>Local preview only</small>
+                  <small>Saved as pending · no payment processed</small>
                 </div>
               )}
               <div className="zc-summary-foot">
