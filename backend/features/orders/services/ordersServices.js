@@ -1,4 +1,4 @@
-const AppError = require('../../../utils/AppError.js');
+﻿const AppError = require('../../../utils/AppError.js');
 const pool = require('../../../config/connect_database.js');
 const generateOrderNumber = require("../../../utils/orderNumbers.js");
 
@@ -6,10 +6,28 @@ const generateOrderNumber = require("../../../utils/orderNumbers.js");
 exports.getOrders = async (userId) => {
     const result = await pool.query(
         `
-        SELECT *
-        FROM orders
-        WHERE user_id = $1
-        ORDER BY created_at DESC
+        SELECT 
+            o.*,
+            p.payment_method,
+            p.payment_status,
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'order_item_id', oi.order_item_id,
+                        'product_id', oi.product_id,
+                        'product_name', oi.product_name,
+                        'quantity', oi.quantity,
+                        'price', oi.price
+                    )
+                ) FILTER (WHERE oi.order_item_id IS NOT NULL),
+                '[]'
+            ) AS items
+        FROM orders o
+        LEFT JOIN payments p ON p.order_id = o.order_id
+        LEFT JOIN order_items oi ON oi.order_id = o.order_id
+        WHERE o.user_id = $1
+        GROUP BY o.order_id, p.payment_method, p.payment_status
+        ORDER BY o.created_at DESC
         `,
         [userId]
     );
@@ -22,10 +40,14 @@ exports.getOrderById = async (orderId, userId) => {
     try {
         const order = await pool.query(
             `
-            SELECT *
-            FROM orders
-            WHERE order_id = $1
-            AND user_id = $2
+            SELECT 
+                o.*,
+                p.payment_method,
+                p.payment_status
+            FROM orders o
+            LEFT JOIN payments p ON p.order_id = o.order_id
+            WHERE o.order_id = $1
+            AND o.user_id = $2
             `,
             [orderId, userId]
         );

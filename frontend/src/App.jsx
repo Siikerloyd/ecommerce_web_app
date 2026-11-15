@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginForm } from "./features/auth/pages/LoginForm";
 import { RegisterForm } from "./features/auth/pages/RegisterForm";
@@ -9,6 +8,8 @@ import ProductDetail from "./features/products/pages/ProductDetail";
 import Cart from "./features/cart/pages/Cart";
 import Checkout from "./features/checkout/pages/Checkout";
 import Account from "./features/account/pages/Account";
+import Addresses from "./features/account/pages/Addresses";
+import Orders from "./features/account/pages/Orders";
 import { CartProvider } from "./features/cart/context/CartContext.jsx";
 import MiniCartDrawer from "./features/cart/components/MiniCartDrawer";
 
@@ -32,6 +33,8 @@ function App() {
 
                     <Route element={<ProtectedRoute />}>
                         <Route path="/account" element={<Account />} />
+                        <Route path="/account/orders" element={<Orders />} />
+                        <Route path="/account/addresses" element={<Addresses />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/home" element={<HomePage />} />
                     </Route>

@@ -4,9 +4,13 @@ import { createContext, useState, useEffect, useCallback } from "react";
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
+/* eslint-disable react-refresh/only-export-components */
 export const AuthContext = createContext();
+/* eslint-enable react-refresh/only-export-components */
 
+/* eslint-disable react-refresh/only-export-components */
 export function AuthProvider({ children }) {
+/* eslint-enable react-refresh/only-export-components */
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -46,7 +50,12 @@ export function AuthProvider({ children }) {
     }, [apiFetch]);
 
     useEffect(() => {
-        checkSession();
+        let mounted = true;
+        (async () => {
+            await checkSession();
+            if (!mounted) return;
+        })();
+        return () => { mounted = false; };
     }, [checkSession]);
 
     const logout = async () => {
